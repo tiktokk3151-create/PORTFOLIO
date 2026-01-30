@@ -7,7 +7,7 @@ import { GripVertical, Eye, EyeOff, Edit, ChevronDown, ChevronUp, Save, CheckCir
 import { HomeSectionConfig, HomeContentData } from '../../types';
 
 const HomeManager: React.FC = () => {
-  const { homeLayout, updateHomeLayout, homeContent, updateAllHomeContent } = useData();
+  const { homeLayout, updateHomeLayout, homeContent, updateAllHomeContent, uploadFile } = useData(); // Added uploadFile
   const { language, toggleLanguage } = useLanguage(); 
   
   const [items, setItems] = useState<HomeSectionConfig[]>(homeLayout);
@@ -21,19 +21,13 @@ const HomeManager: React.FC = () => {
       setItems(homeLayout);
   }, [homeLayout]);
 
-  // CRITICAL FIX: Sync Content from Context when it finishes loading from LocalStorage
   useEffect(() => {
       setLocalContent(homeContent);
   }, [homeContent]);
   
-  // Sync when saving
   const handleSave = () => {
-      // 1. Save Layout Order
       updateHomeLayout(items);
-      
-      // 2. Save Content - ONE SHOT to avoid race conditions
       updateAllHomeContent(localContent);
-
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000);
   };
@@ -55,33 +49,26 @@ const HomeManager: React.FC = () => {
       }));
   };
 
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
-  };
-
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (file.size > 2 * 1024 * 1024) { 
-          alert("Ảnh quá lớn! Vui lòng chọn ảnh < 2MB.");
+      if (file.size > 5 * 1024 * 1024) { 
+          alert("Ảnh quá lớn! Vui lòng chọn ảnh < 5MB.");
           return;
       }
 
       setIsUploading(true);
       try {
-          const base64 = await convertFileToBase64(file);
-          updateField('about', 'image', base64);
+          // --- UPDATED LOGIC: Upload to Supabase ---
+          const imageUrl = await uploadFile(file);
+          updateField('about', 'image', imageUrl);
       } catch (err) {
           console.error("Lỗi upload ảnh", err);
-          alert("Có lỗi khi xử lý ảnh.");
+          // Error already alerted by uploadFile helper
       } finally {
           setIsUploading(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
       }
   };
 
@@ -117,7 +104,7 @@ const HomeManager: React.FC = () => {
                                           className="bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 px-3 py-1.5 rounded-lg font-bold text-xs hover:bg-violet-200 transition-colors flex items-center gap-2"
                                       >
                                           {isUploading ? <Loader2 className="w-3 h-3 animate-spin"/> : <Upload className="w-3 h-3" />}
-                                          Tải ảnh
+                                          {isUploading ? 'Đang Upload...' : 'Tải lên Cloud'}
                                       </button>
                                       <input 
                                           type="file" 
@@ -132,7 +119,7 @@ const HomeManager: React.FC = () => {
                                       value={localContent.about.image || ''} 
                                       onChange={e => updateField('about', 'image', e.target.value)} 
                                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 text-xs text-slate-500" 
-                                      placeholder="Link ảnh..."
+                                      placeholder="Hoặc dán URL ảnh có sẵn..."
                                   />
                               </div>
                           </div>

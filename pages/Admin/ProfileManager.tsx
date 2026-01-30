@@ -1,21 +1,13 @@
+
 import React, { useState, useRef } from 'react';
 import { useData } from '../../DataContext';
-import { Upload, FileText, CheckCircle2, AlertCircle, Loader2, Save, X } from 'lucide-react';
+import { Upload, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 const ProfileManager: React.FC = () => {
-  const { cvUrl, updateCv } = useData();
+  const { cvUrl, updateCv, uploadFile } = useData(); // Added uploadFile
   const [isUploading, setIsUploading] = useState(false);
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,22 +21,30 @@ const ProfileManager: React.FC = () => {
         return;
     }
 
-    // Check file size (Limit increased to 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-        setMessage({ type: 'error', text: 'File quá lớn! Vui lòng tải file nhỏ hơn 5MB.' });
+    // Check file size (Supabase limit usually higher, but keep safe limit)
+    if (file.size > 10 * 1024 * 1024) {
+        setMessage({ type: 'error', text: 'File quá lớn! Vui lòng tải file nhỏ hơn 10MB.' });
         return;
     }
 
     setIsUploading(true);
     try {
-        const base64 = await convertFileToBase64(file);
-        updateCv(base64);
-        setMessage({ type: 'success', text: 'Đã cập nhật CV thành công!' });
-    } catch (err) {
+        // --- UPDATED LOGIC: Upload to Supabase instead of Base64 ---
+        const publicUrl = await uploadFile(file);
+        
+        // Save the Public URL instead of the file content
+        updateCv(publicUrl);
+        setMessage({ type: 'success', text: 'Đã tải CV lên Cloud và cập nhật thành công!' });
+    } catch (err: any) {
         console.error(err);
-        setMessage({ type: 'error', text: 'Có lỗi xảy ra khi xử lý file. Có thể do bộ nhớ trình duyệt đã đầy.' });
+        // Error is already alerted by uploadFile if it's a Supabase connection issue
+        if (!err.message?.includes('Supabase')) {
+             setMessage({ type: 'error', text: 'Lỗi tải file. Vui lòng kiểm tra kết nối mạng.' });
+        }
     } finally {
         setIsUploading(false);
+        // Reset input
+        if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
@@ -74,15 +74,16 @@ const ProfileManager: React.FC = () => {
                 </h3>
                 <p className="text-slate-500 text-sm">
                     {cvUrl 
-                        ? 'CV của bạn đang hiển thị công khai. Bạn có thể tải lên bản mới để thay thế.' 
-                        : 'Vui lòng tải lên file PDF. Dung lượng tối đa 5MB.'}
+                        ? 'CV của bạn đang được lưu trữ trên Cloud và hiển thị công khai.' 
+                        : 'Vui lòng tải lên file PDF. Dung lượng tối đa 10MB.'}
                 </p>
                 
                 {cvUrl && (
                     <div className="mt-3 flex gap-3">
                         <a 
                             href={cvUrl} 
-                            download="My_CV_Preview.pdf"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="text-sm font-bold text-violet-600 hover:text-violet-700 hover:underline"
                         >
                             Xem CV hiện tại
@@ -120,13 +121,13 @@ const ProfileManager: React.FC = () => {
                 {isUploading ? (
                     <div className="flex flex-col items-center">
                         <Loader2 className="w-8 h-8 text-violet-600 animate-spin mb-2" />
-                        <span className="text-slate-500 font-medium">Đang xử lý và lưu trữ...</span>
+                        <span className="text-slate-500 font-medium">Đang upload lên Supabase Storage...</span>
                     </div>
                 ) : (
                     <div className="flex flex-col items-center">
                         <Upload className="w-10 h-10 text-slate-400 mb-3" />
                         <span className="text-slate-900 dark:text-white font-bold mb-1">Nhấn để chọn file</span>
-                        <span className="text-xs text-slate-500">hoặc kéo thả file vào đây (Max 5MB)</span>
+                        <span className="text-xs text-slate-500">hoặc kéo thả file vào đây (Max 10MB)</span>
                     </div>
                 )}
             </div>

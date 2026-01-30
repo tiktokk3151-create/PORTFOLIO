@@ -7,7 +7,7 @@ import { GripVertical, Eye, EyeOff, Edit, ChevronDown, ChevronUp, Save, CheckCir
 import { AboutSectionConfig, AboutContentData, ExperienceItem } from '../../types';
 
 const AboutManager: React.FC = () => {
-  const { aboutLayout, updateAboutLayout, aboutContent, updateAllAboutContent } = useData();
+  const { aboutLayout, updateAboutLayout, aboutContent, updateAllAboutContent, uploadFile } = useData(); // Added uploadFile
   const { language, toggleLanguage } = useLanguage(); 
   
   const [items, setItems] = useState<AboutSectionConfig[]>(aboutLayout);
@@ -22,7 +22,7 @@ const AboutManager: React.FC = () => {
       setItems(aboutLayout);
   }, [aboutLayout]);
 
-  // CRITICAL FIX: Sync Content from Context when it finishes loading from LocalStorage
+  // Sync Content from Context
   useEffect(() => {
       setLocalContent(aboutContent);
   }, [aboutContent]);
@@ -52,35 +52,26 @@ const AboutManager: React.FC = () => {
       }));
   };
 
-  // Helper for Image Upload
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
-  };
-
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (file.size > 2 * 1024 * 1024) { 
-          alert("Ảnh quá lớn! Vui lòng chọn ảnh < 2MB.");
+      if (file.size > 5 * 1024 * 1024) { 
+          alert("Ảnh quá lớn! Vui lòng chọn ảnh < 5MB.");
           return;
       }
 
       setIsUploading(true);
       try {
-          const base64 = await convertFileToBase64(file);
-          // Only supports intro main image upload for now based on UI location
-          updateField('intro', 'mainImage', base64);
+          // --- UPDATED LOGIC: Upload to Supabase ---
+          const imageUrl = await uploadFile(file);
+          updateField('intro', 'mainImage', imageUrl);
       } catch (err) {
           console.error("Lỗi upload ảnh", err);
-          alert("Có lỗi khi xử lý ảnh.");
+          // Error handling done in uploadFile
       } finally {
           setIsUploading(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
       }
   };
 
@@ -148,7 +139,7 @@ const AboutManager: React.FC = () => {
                                           className="bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-300 px-4 py-2 rounded-lg font-bold text-sm hover:bg-violet-200 transition-colors flex items-center gap-2"
                                       >
                                           {isUploading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Upload className="w-4 h-4" />}
-                                          Tải ảnh mới
+                                          {isUploading ? 'Đang Upload...' : 'Tải lên Cloud'}
                                       </button>
                                       <input 
                                           type="file" 
@@ -163,7 +154,7 @@ const AboutManager: React.FC = () => {
                                       value={localContent.intro.mainImage} 
                                       onChange={e => updateField('intro', 'mainImage', e.target.value)} 
                                       className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 text-xs text-slate-500" 
-                                      placeholder="Hoặc dán link ảnh URL..."
+                                      placeholder="Hoặc dán URL ảnh có sẵn..."
                                   />
                               </div>
                           </div>
@@ -238,7 +229,7 @@ const AboutManager: React.FC = () => {
                return (
                   <div className="grid grid-cols-1 gap-4 pt-4">
                        <div><label className="text-xs font-bold text-slate-500">Tiêu đề Section</label><input type="text" value={localContent.hobbies.title} onChange={e => updateField('hobbies', 'title', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded p-2 text-sm" /></div>
-                       <p className="text-xs text-slate-400 italic">Hiện tại chỉ hỗ trợ chỉnh sửa tiêu đề mục sở thích. Nội dung các icon được cố định theo cấu trúc hình ảnh/icon phức tạp.</p>
+                       <p className="text-xs text-slate-400 italic">Hiện tại chỉ hỗ trợ chỉnh sửa tiêu đề mục sở thích.</p>
                   </div>
                );
           default: return null;
