@@ -4,6 +4,7 @@ import { projectsVi as initialProjectsVi, projectsEn as initialProjectsEn } from
 import { translations as initialTranslations } from './translations';
 import { Project, Language, HomeSectionConfig, HomeContentData, AboutSectionConfig, AboutContentData, ContactMessage, Category, ContactContentData, DevOpsConfig } from './types';
 import { useLanguage } from './LanguageContext';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 export interface Notification {
     type: 'success' | 'error' | 'info';
@@ -23,62 +24,49 @@ interface DataContextType {
   logout: () => void;
   cvUrl: string;
   updateCv: (base64String: string) => void;
-  // --- CATEGORIES ---
   categories: Category[];
   addCategory: (name: string) => void;
   updateCategory: (id: string, newName: string) => void; 
   deleteCategory: (id: string) => void;
-  // --- HOME CMS ---
   homeLayout: HomeSectionConfig[];
   updateHomeLayout: (newLayout: HomeSectionConfig[]) => void;
   homeContent: HomeContentData;
   updateHomeContent: (section: keyof HomeContentData, data: any) => void;
   updateAllHomeContent: (data: HomeContentData) => void;
-  // --- ABOUT CMS ---
   aboutLayout: AboutSectionConfig[];
   updateAboutLayout: (newLayout: AboutSectionConfig[]) => void;
   aboutContent: AboutContentData;
   updateAllAboutContent: (data: AboutContentData) => void;
-  // --- CONTACT CMS ---
   contactContent: ContactContentData;
   updateContactContent: (data: ContactContentData) => void;
-  // --- DEVOPS CMS ---
   devOpsConfig: DevOpsConfig;
   updateDevOpsConfig: (data: DevOpsConfig) => void;
-  // --- CONTACT / INBOX ---
+  supabaseClient: SupabaseClient | null; 
+  uploadFile: (file: File) => Promise<string>;
   messages: ContactMessage[];
   sendMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => void;
   deleteMessage: (id: number) => void;
   deleteMessages: (ids: number[]) => void; 
   markAsRead: (id: number) => void; 
   markAllAsRead: () => void; 
-  // --- NOTIFICATIONS ---
   notification: Notification | null;
   showNotification: (type: 'success' | 'error' | 'info', message: string) => void;
   hideNotification: () => void;
-  // --- ANALYTICS ---
   totalVisits: number;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// --- SAFE STORAGE HELPER ---
 const safeSetItem = (key: string, value: string): boolean => {
     try {
         localStorage.setItem(key, value);
         return true;
     } catch (e: any) {
-        if (e.name === 'QuotaExceededError' || e.code === 22 || e.message?.toLowerCase().includes('quota')) {
-            alert('⚠️ LỖI BỘ NHỚ TRÌNH DUYỆT ĐÃ ĐẦY!\n\nKhông thể lưu thay đổi do dung lượng LocalStorage (5MB) đã hết.\nVui lòng:\n1. Xóa bớt các dự án cũ hoặc hình ảnh không cần thiết.\n2. Sử dụng Link URL cho video/ảnh thay vì upload trực tiếp.\n3. Xóa cache trình duyệt nếu cần.');
-            console.error('LocalStorage Quota Exceeded');
-        } else {
-            console.error('LocalStorage Error:', e);
-        }
+        console.error('LocalStorage Error:', e);
         return false;
     }
 };
 
-// --- DEFAULT CATEGORIES ---
 const defaultCategories: Category[] = [
     { id: 'Web', name: 'Web' },
     { id: 'Mobile', name: 'Mobile' },
@@ -86,7 +74,6 @@ const defaultCategories: Category[] = [
     { id: 'Blockchain', name: 'Blockchain' }
 ];
 
-// --- DEFAULT DATA HOME (VIETNAMESE) ---
 const defaultHomeContentVi: HomeContentData = {
   hero: { badge: 'Sẵn sàng làm việc', title1: 'Thiết kế', title2: 'Tương lai', title3: 'Web', desc: "Tôi là Trần Quốc Tuấn. Một chuyên gia thiết kế UI/UX đam mê tạo ra các trải nghiệm kỹ thuật số thân thiện, thẩm mỹ và chuyên nghiệp." },
   about: { badge: 'Về Tôi', title: 'Giấc mơ Số', desc: "Với hơn 7 năm kinh nghiệm chuyên sâu, tôi kết hợp tư duy thiết kế sáng tạo và hiểu biết kỹ thuật để xây dựng những sản phẩm số không chỉ đẹp mắt mà còn tối ưu hóa trải nghiệm người dùng.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop" },
@@ -95,7 +82,6 @@ const defaultHomeContentVi: HomeContentData = {
   cta: { status: 'Trạng thái: Sẵn sàng', title1: 'Bạn có ý tưởng?', title2: "Cùng tạo ra tương lai.", desc: "Tôi hiện đang tìm kiếm cơ hội mới. Dù bạn có thắc mắc hay chỉ muốn chào hỏi!" }
 };
 
-// --- DEFAULT DATA HOME (ENGLISH) ---
 const defaultHomeContentEn: HomeContentData = {
   hero: { badge: 'Available for hire', title1: 'Designing the', title2: 'Future', title3: 'Web', desc: "I'm Trần Quốc Tuấn. A passionate UI/UX Designer creating user-friendly, aesthetic, and professional digital experiences." },
   about: { badge: 'About Me', title: 'Digital Dreams', desc: "With over 7 years of specialized experience, I combine creative design thinking with technical understanding to build digital products that are not only visually stunning but also optimized for user experience.", image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop" },
@@ -112,7 +98,6 @@ const defaultHomeLayout: HomeSectionConfig[] = [
   { id: 'cta', label: 'Call To Action', visible: true, order: 4 },
 ];
 
-// --- DEFAULT DATA ABOUT ---
 const defaultAboutLayout: AboutSectionConfig[] = [
     { id: 'intro', label: 'Introduction & Stats', visible: true, order: 0 },
     { id: 'education', label: 'Education Background', visible: true, order: 1 },
@@ -254,7 +239,6 @@ const defaultAboutContentEn: AboutContentData = {
     }
 };
 
-// --- DEFAULT DATA CONTACT ---
 const defaultContactContentVi: ContactContentData = {
     badge: "Liên hệ",
     title1: "Cùng tạo ra",
@@ -286,7 +270,6 @@ const defaultDevOpsConfig: DevOpsConfig = {
 export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
   const { language } = useLanguage();
   
-  // --- STATE ---
   const [projects, setProjectsState] = useState<Project[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [translationsData, setTranslationsData] = useState(initialTranslations);
@@ -295,29 +278,19 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
   const [totalVisits, setTotalVisits] = useState<number>(0);
   const visitsLoaded = useRef(false);
   
-  // Home CMS State
   const [homeLayout, setHomeLayout] = useState<HomeSectionConfig[]>(defaultHomeLayout);
   const [homeContent, setHomeContent] = useState<HomeContentData>(defaultHomeContentVi);
-
-  // About CMS State
   const [aboutLayout, setAboutLayout] = useState<AboutSectionConfig[]>(defaultAboutLayout);
   const [aboutContent, setAboutContent] = useState<AboutContentData>(defaultAboutContentVi);
-
-  // Contact CMS State
   const [contactContent, setContactContent] = useState<ContactContentData>(defaultContactContentVi);
-
-  // DevOps State
+  
   const [devOpsConfig, setDevOpsConfig] = useState<DevOpsConfig>(defaultDevOpsConfig);
-
-  // Inbox Messages State
+  const [supabaseClient, setSupabaseClient] = useState<SupabaseClient | null>(null);
+  
   const [messages, setMessages] = useState<ContactMessage[]>([]);
-
-  // Notification State
   const [notification, setNotification] = useState<Notification | null>(null);
 
-  // --- INIT DATA & LANGUAGE SWITCHING ---
   useEffect(() => {
-    // 1. Projects
     const projectsKey = `portfolio_projects_${language}`;
     const savedProjects = localStorage.getItem(projectsKey);
     if (savedProjects) {
@@ -326,7 +299,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
         setProjectsState(language === 'vi' ? initialProjectsVi : initialProjectsEn);
     }
 
-    // 2. Categories (Shared across languages)
     const savedCats = localStorage.getItem('portfolio_categories');
     if (savedCats) {
         setCategories(JSON.parse(savedCats));
@@ -334,7 +306,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
         setCategories(defaultCategories);
     }
 
-    // 3. Home Content (Language Specific)
     const homeContentKey = `portfolio_home_content_${language}`;
     const savedHomeContent = localStorage.getItem(homeContentKey);
     if (savedHomeContent) {
@@ -343,7 +314,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
         setHomeContent(language === 'vi' ? defaultHomeContentVi : defaultHomeContentEn);
     }
 
-    // 4. About Content (Language Specific)
     const aboutContentKey = `portfolio_about_content_${language}`;
     const savedAboutContent = localStorage.getItem(aboutContentKey);
     if (savedAboutContent) {
@@ -352,7 +322,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
         setAboutContent(language === 'vi' ? defaultAboutContentVi : defaultAboutContentEn);
     }
 
-    // 5. Contact Content (Language Specific)
     const contactContentKey = `portfolio_contact_content_${language}`;
     const savedContactContent = localStorage.getItem(contactContentKey);
     if (savedContactContent) {
@@ -361,7 +330,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
         setContactContent(language === 'vi' ? defaultContactContentVi : defaultContactContentEn);
     }
 
-    // 6. Layouts, DevOps & Shared Data
     const savedCv = localStorage.getItem('portfolio_cv');
     if (savedCv) setCvUrl(savedCv);
 
@@ -372,7 +340,19 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
     if (savedAboutLayout) setAboutLayout(JSON.parse(savedAboutLayout));
 
     const savedDevOps = localStorage.getItem('portfolio_devops');
-    if (savedDevOps) setDevOpsConfig(JSON.parse(savedDevOps));
+    if (savedDevOps) {
+        const config = JSON.parse(savedDevOps);
+        setDevOpsConfig(config);
+        
+        if (config.supabase?.projectUrl && config.supabase?.anonKey) {
+            try {
+                const client = createClient(config.supabase.projectUrl, config.supabase.anonKey);
+                setSupabaseClient(client);
+            } catch (e) {
+                console.error("Failed to init Supabase client", e);
+            }
+        }
+    }
 
     const savedMessages = localStorage.getItem('portfolio_messages');
     if (savedMessages) setMessages(JSON.parse(savedMessages));
@@ -380,7 +360,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
     const auth = localStorage.getItem('admin_auth');
     if (auth === 'true') setIsAuthenticated(true);
 
-    // 7. Visits
     if (!visitsLoaded.current) {
         const savedVisits = localStorage.getItem('portfolio_total_visits');
         let currentVisits = savedVisits ? parseInt(savedVisits) : 12500;
@@ -391,7 +370,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
     }
   }, [language]);
 
-  // --- PERSISTENCE HELPERS ---
   const saveProjects = (newProjects: Project[]) => {
     setProjectsState(newProjects);
     const projectsKey = `portfolio_projects_${language}`;
@@ -406,6 +384,47 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
   const updateCv = (base64String: string) => {
     setCvUrl(base64String);
     safeSetItem('portfolio_cv', base64String);
+  };
+
+  // --- SUPABASE UPLOAD (STRICT MODE) ---
+  const uploadFile = async (file: File): Promise<string> => {
+      // STRICT CHECK: We do NOT fallback to Base64/LocalStorage if Supabase is missing.
+      // This ensures the user is forced to connect Supabase for a "Real" app experience.
+      if (!supabaseClient) {
+          const errorMsg = "❌ LỖI: Chưa kết nối Supabase Storage!\n\nBạn đang ở chế độ 'Chạy Thật', nên hệ thống từ chối lưu ảnh vào bộ nhớ tạm trình duyệt (vì nó không bền vững).\n\nVui lòng vào Admin > DevOps Center và điền thông tin Supabase Project URL & Anon Key.";
+          alert(errorMsg);
+          throw new Error("Supabase not connected");
+      }
+
+      try {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const filePath = `uploads/${fileName}`;
+
+          // Upload to 'portfolio' bucket
+          const { error: uploadError } = await supabaseClient.storage
+              .from('portfolio') 
+              .upload(filePath, file);
+
+          if (uploadError) {
+              console.error("Supabase Upload Error:", uploadError);
+              throw uploadError;
+          }
+
+          const { data: publicUrlData } = supabaseClient.storage
+              .from('portfolio')
+              .getPublicUrl(filePath);
+
+          return publicUrlData.publicUrl;
+      } catch (error: any) {
+          console.error("Critical Upload Error:", error);
+          if (error.message && error.message.includes('bucket not found')) {
+             alert("❌ LỖI BUCKET: Supabase đã kết nối nhưng chưa tìm thấy Bucket 'portfolio'.\n\nVui lòng vào Supabase Dashboard > Storage > Create new bucket > Đặt tên là 'portfolio' và chọn 'Public Bucket'.");
+          } else {
+             alert(`❌ LỖI UPLOAD: ${error.message || 'Không xác định'}`);
+          }
+          throw error;
+      }
   };
 
   const addProject = (project: Project) => {
@@ -423,7 +442,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
     saveProjects(newProjects);
   };
 
-  // --- CATEGORY ACTIONS ---
   const addCategory = (name: string) => {
       const newCat: Category = { id: name, name: name };
       setCategories(prev => {
@@ -466,7 +484,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
     }
   };
 
-  // --- HOME CMS ACTIONS ---
   const updateHomeLayout = (newLayout: HomeSectionConfig[]) => {
       setHomeLayout(newLayout);
       safeSetItem('portfolio_home_layout', JSON.stringify(newLayout));
@@ -485,7 +502,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
       safeSetItem(key, JSON.stringify(data));
   };
 
-  // --- ABOUT CMS ACTIONS ---
   const updateAboutLayout = (newLayout: AboutSectionConfig[]) => {
       setAboutLayout(newLayout);
       safeSetItem('portfolio_about_layout', JSON.stringify(newLayout));
@@ -497,20 +513,26 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
       safeSetItem(key, JSON.stringify(data));
   };
 
-  // --- CONTACT CMS ACTIONS ---
   const updateContactContent = (data: ContactContentData) => {
       setContactContent(data);
       const key = `portfolio_contact_content_${language}`;
       safeSetItem(key, JSON.stringify(data));
   };
 
-  // --- DEVOPS ACTIONS ---
   const updateDevOpsConfig = (data: DevOpsConfig) => {
       setDevOpsConfig(data);
       safeSetItem('portfolio_devops', JSON.stringify(data));
+      
+      if (data.supabase.projectUrl && data.supabase.anonKey) {
+          try {
+              const client = createClient(data.supabase.projectUrl, data.supabase.anonKey);
+              setSupabaseClient(client);
+          } catch (e) {
+              console.error("Failed to update Supabase client", e);
+          }
+      }
   };
 
-  // --- MESSAGING ACTIONS ---
   const sendMessage = (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => {
       const newMessage: ContactMessage = {
           ...msg,
@@ -547,7 +569,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
       safeSetItem('portfolio_messages', JSON.stringify(updatedMessages));
   };
 
-  // --- NOTIFICATION ACTIONS ---
   const showNotification = (type: 'success' | 'error' | 'info', message: string) => {
       setNotification({ type, message });
       setTimeout(() => {
@@ -558,7 +579,6 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
   const hideNotification = () => {
       setNotification(null);
   };
-
 
   const login = (password: string) => {
     if (password === 'admin123') {
@@ -605,6 +625,8 @@ export const DataProvider = ({ children }: { children?: React.ReactNode }) => {
       updateContactContent,
       devOpsConfig,
       updateDevOpsConfig,
+      supabaseClient,
+      uploadFile,
       messages,
       sendMessage,
       deleteMessage,

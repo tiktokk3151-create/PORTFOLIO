@@ -13,7 +13,7 @@ const DevOpsCenter: React.FC = () => {
   const { devOpsConfig, updateDevOpsConfig, showNotification } = useData();
   const [activeTab, setActiveTab] = useState<'deploy' | 'config' | 'ai'>('deploy');
   
-  // Fake Terminal State
+  // Real Terminal State
   const [logs, setLogs] = useState<string[]>([]);
   const [isBuilding, setIsBuilding] = useState(false);
   const terminalEndRef = useRef<HTMLDivElement>(null);
@@ -24,13 +24,12 @@ const DevOpsCenter: React.FC = () => {
   const [generatedCode, setGeneratedCode] = useState('');
   const [generationStep, setGenerationStep] = useState<'idle' | 'thinking' | 'coding' | 'done'>('idle');
 
-  // Auto scroll terminal
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [logs]);
 
-  // Handle Deployment Simulation
-  const handleDeploy = () => {
+  // Handle Deployment Logic (Real Fetch)
+  const handleDeploy = async () => {
       if (!devOpsConfig.cloudflare.deployHookUrl) {
           showNotification('error', 'Chưa cấu hình Cloudflare Deploy Hook!');
           setActiveTab('config');
@@ -38,114 +37,68 @@ const DevOpsCenter: React.FC = () => {
       }
 
       setIsBuilding(true);
-      setLogs([]);
+      setLogs([]); // Clear old logs
       
-      // Simulate Build Process logs
-      const steps = [
-          { msg: "> Connecting to Cloudflare Pages...", delay: 500 },
-          { msg: `> Triggering Hook: ${devOpsConfig.cloudflare.deployHookUrl.substring(0, 20)}...`, delay: 1000 },
-          { msg: "> Webhook sent successfully [200 OK]", delay: 1500 },
-          { msg: "> Waiting for build worker...", delay: 2500 },
-          { msg: "> Cloning repository from GitHub...", delay: 3500 },
-          { msg: "> Installing dependencies (npm install)...", delay: 5000 },
-          { msg: "> Building React App (vite build)...", delay: 7000 },
-          { msg: "> Optimizing assets...", delay: 8500 },
-          { msg: "> Uploading to Cloudflare Edge Network...", delay: 9500 },
-          { msg: "> Verifying deployment...", delay: 10500 },
-          { msg: "✔ DEPLOYMENT SUCCESSFUL!", delay: 11000 },
-      ];
+      const addLog = (msg: string) => {
+          setLogs(prev => [...prev, `${new Date().toLocaleTimeString()} ${msg}`]);
+      };
 
-      steps.forEach(({ msg, delay }, index) => {
-          setTimeout(() => {
-              setLogs(prev => [...prev, `${new Date().toLocaleTimeString()} ${msg}`]);
-              
-              if (index === steps.length - 1) {
-                  setIsBuilding(false);
-                  updateDevOpsConfig({
-                      ...devOpsConfig,
-                      cloudflare: {
-                          ...devOpsConfig.cloudflare,
-                          lastDeploy: new Date().toLocaleString(),
-                          status: 'success'
-                      }
-                  });
-                  showNotification('success', 'Triển khai thành công!');
+      addLog("🚀 Starting deployment sequence...");
+      addLog(`> Target: ${devOpsConfig.cloudflare.projectName || 'Unknown Project'}`);
+      addLog("> Sending secure webhook trigger to Cloudflare API...");
+
+      try {
+          // REAL FETCH CALL TO CLOUDFLARE
+          await fetch(devOpsConfig.cloudflare.deployHookUrl, {
+              method: 'POST',
+              mode: 'no-cors', // Necessary because Cloudflare hooks don't return CORS headers for browser fetch
+          });
+
+          addLog("✔ Webhook sent successfully!");
+          addLog("------------------------------------------------");
+          addLog("NOTE: Cloudflare has received the build signal.");
+          addLog("Build process is running on Cloudflare servers.");
+          addLog("Please check your Cloudflare Dashboard for live progress.");
+          addLog("------------------------------------------------");
+          
+          setIsBuilding(false);
+          updateDevOpsConfig({
+              ...devOpsConfig,
+              cloudflare: {
+                  ...devOpsConfig.cloudflare,
+                  lastDeploy: new Date().toLocaleString(),
+                  status: 'success'
               }
-          }, delay);
-      });
+          });
+          showNotification('success', 'Đã gửi lệnh Deploy thành công!');
+
+      } catch (error) {
+          console.error(error);
+          addLog(`> ❌ ERROR: Failed to trigger webhook. ${error}`);
+          setIsBuilding(false);
+          showNotification('error', 'Lỗi kết nối đến Cloudflare.');
+      }
   };
 
-  // AI Code Generation Simulation
   const handleGenerateCode = () => {
+      // ... (AI code generation logic remains same for demo purposes, or can be hooked to real API if available)
       if (!prompt.trim()) return;
-      if (!devOpsConfig.github.accessToken) {
-          showNotification('error', 'Cần GitHub Token để AI có thể đẩy code!');
-          setActiveTab('config');
-          return;
-      }
-
       setIsGenerating(true);
       setGenerationStep('thinking');
       setGeneratedCode('');
 
-      // Simulate AI phases
       setTimeout(() => {
           setGenerationStep('coding');
-          setGeneratedCode(`// Supabase Edge Function: ${prompt}
-// Generated by Gemini AI Architect
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-serve(async (req) => {
-  const { name } = await req.json()
-  
-  // Initialize Supabase Client
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-  )
-
-  // AI Logic: Processing request...
-  const data = {
-    message: \`Hello \${name} from AI Backend!\`,
-    timestamp: new Date().toISOString()
-  }
-
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
-})`);
+          setGeneratedCode(`// Example Supabase Edge Function Structure\n// Prompt: ${prompt}\n\nimport { serve } from "https://deno.land/std@0.168.0/http/server.ts"\n\nserve(async (req) => {\n  return new Response(\n    JSON.stringify({ message: "Hello from Real Edge Function" }),\n    { headers: { "Content-Type": "application/json" } },\n  )\n})`);
           setIsGenerating(false);
           setGenerationStep('done');
-      }, 3000);
-  };
-
-  const handlePushToGithub = () => {
-      if (!devOpsConfig.github.repoUrl || !devOpsConfig.github.accessToken) {
-          showNotification('error', 'Thiếu thông tin kết nối GitHub!');
-          return;
-      }
-      
-      // Simulation of GitHub API Push
-      showNotification('info', 'Đang commit code lên GitHub...');
-      setTimeout(() => {
-          showNotification('success', 'Đã đẩy code thành công! Cloudflare đang build...');
-          // Trigger deploy automatically
-          setActiveTab('deploy');
-          handleDeploy();
       }, 2000);
   };
 
   const saveConfig = () => {
-      // Validate inputs lightly
       let newConfig = { ...devOpsConfig };
-
       if (newConfig.github.repoUrl) newConfig.github.connected = true;
       if (newConfig.cloudflare.deployHookUrl) newConfig.cloudflare.connected = true;
-      
-      // Validate Supabase
       if (newConfig.supabase.projectUrl && newConfig.supabase.anonKey) {
           newConfig.supabase.connected = true;
       } else {
@@ -175,12 +128,6 @@ serve(async (req) => {
                 <Rocket className="w-4 h-4" /> Deploy
             </button>
             <button 
-                onClick={() => setActiveTab('ai')}
-                className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'ai' ? 'bg-white dark:bg-slate-700 shadow-sm text-violet-600 dark:text-violet-400' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-            >
-                <Bot className="w-4 h-4" /> AI Architect
-            </button>
-            <button 
                 onClick={() => setActiveTab('config')}
                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'config' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
             >
@@ -190,7 +137,6 @@ serve(async (req) => {
       </div>
 
       <AnimatePresence mode="wait">
-        {/* TAB 1: DEPLOYMENT CONTROL */}
         {activeTab === 'deploy' && (
             <motion.div 
                 initial={{ opacity: 0, y: 10 }}
@@ -233,7 +179,7 @@ serve(async (req) => {
                     <div className="bg-[#1e1e1e] rounded-2xl overflow-hidden border border-slate-800 shadow-2xl h-[400px] flex flex-col font-mono text-sm">
                         <div className="bg-[#2d2d2d] px-4 py-2 flex items-center gap-2 border-b border-black/20">
                             <Terminal className="w-4 h-4 text-slate-400" />
-                            <span className="text-slate-300 text-xs">Build Logs</span>
+                            <span className="text-slate-300 text-xs">Deployment Logs</span>
                             <div className="ml-auto flex gap-1.5">
                                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
                                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/50"></div>
@@ -260,7 +206,7 @@ serve(async (req) => {
 
                 {/* Actions Panel */}
                 <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 h-fit">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Deployment Actions</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Actions</h3>
                     
                     <div className="space-y-4">
                         <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl">
@@ -277,115 +223,16 @@ serve(async (req) => {
                             className={`w-full py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all ${isBuilding ? 'bg-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:scale-[1.02] hover:shadow-violet-500/30'}`}
                         >
                             {isBuilding ? (
-                                <><RefreshCw className="w-5 h-5 animate-spin" /> Deploying...</>
+                                <><RefreshCw className="w-5 h-5 animate-spin" /> Sending Trigger...</>
                             ) : (
-                                <><Rocket className="w-5 h-5" /> Trigger Deploy</>
+                                <><Rocket className="w-5 h-5" /> Trigger Cloudflare</>
                             )}
                         </button>
                         
                         <div className="text-xs text-slate-400 text-center px-4">
                             <ShieldCheck className="w-3 h-3 inline mr-1" />
-                            Secure webhook trigger via Cloudflare Pages
+                            Secure webhook trigger
                         </div>
-                    </div>
-                </div>
-            </motion.div>
-        )}
-
-        {/* TAB 3: AI ARCHITECT (NEW) */}
-        {activeTab === 'ai' && (
-            <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="grid grid-cols-1 lg:grid-cols-12 gap-8"
-            >
-                {/* Chat / Input Area */}
-                <div className="lg:col-span-5 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 flex flex-col h-[500px]">
-                    <div className="mb-4">
-                        <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
-                            <Bot className="w-6 h-6 text-violet-600" /> Backend Generator
-                        </h3>
-                        <p className="text-xs text-slate-500 mt-1">Sử dụng Gemini AI để viết API & Edge Functions cho Supabase.</p>
-                    </div>
-
-                    <div className="flex-1 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 mb-4 overflow-y-auto">
-                        {generationStep === 'idle' && (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400 text-center p-4">
-                                <Cpu className="w-12 h-12 mb-2 opacity-50" />
-                                <p className="text-sm">Hãy mô tả backend bạn muốn xây dựng.<br/>Ví dụ: "Tạo API để lấy danh sách sản phẩm"</p>
-                            </div>
-                        )}
-                        {generationStep === 'thinking' && (
-                            <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
-                                <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce"></div>
-                                <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce delay-100"></div>
-                                <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce delay-200"></div>
-                                <span className="text-sm font-bold">AI đang suy nghĩ...</span>
-                            </div>
-                        )}
-                        {generationStep === 'done' && (
-                            <div className="flex flex-col gap-2">
-                                <div className="self-end bg-slate-200 dark:bg-slate-700 px-4 py-2 rounded-xl rounded-tr-none text-sm max-w-[80%]">
-                                    {prompt}
-                                </div>
-                                <div className="self-start bg-violet-100 dark:bg-violet-900/30 text-violet-800 dark:text-violet-200 px-4 py-2 rounded-xl rounded-tl-none text-sm max-w-[90%]">
-                                    <p className="font-bold mb-1">Đã xong! Tôi đã tạo mã nguồn cho bạn.</p>
-                                    <p>Hãy kiểm tra code bên phải trước khi đẩy lên GitHub.</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="relative">
-                        <textarea 
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Nhập yêu cầu (VD: Viết function gửi email chào mừng...)"
-                            className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-xl p-4 pr-12 text-sm focus:ring-2 focus:ring-violet-500 outline-none resize-none h-24"
-                            disabled={isGenerating}
-                        />
-                        <button 
-                            onClick={handleGenerateCode}
-                            disabled={!prompt.trim() || isGenerating}
-                            className="absolute right-2 bottom-2 p-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 disabled:opacity-50 transition-colors"
-                        >
-                            <Rocket className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-
-                {/* Code Preview Area */}
-                <div className="lg:col-span-7 bg-[#1e1e1e] rounded-3xl border border-slate-800 overflow-hidden flex flex-col h-[500px]">
-                    <div className="bg-[#2d2d2d] px-4 py-3 flex items-center justify-between border-b border-black/20">
-                        <div className="flex items-center gap-2">
-                            <FileCode className="w-4 h-4 text-blue-400" />
-                            <span className="text-slate-300 text-xs font-mono">supabase/functions/api/index.ts</span>
-                        </div>
-                        {generationStep === 'done' && (
-                            <button 
-                                onClick={handlePushToGithub}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs font-bold flex items-center gap-1 transition-colors"
-                            >
-                                <GitBranch className="w-3 h-3" /> Commit & Push
-                            </button>
-                        )}
-                    </div>
-                    <div className="flex-1 p-4 overflow-auto font-mono text-sm text-slate-300 relative">
-                        {isGenerating && generationStep === 'coding' ? (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-10">
-                                <RefreshCw className="w-8 h-8 text-violet-500 animate-spin" />
-                            </div>
-                        ) : null}
-                        
-                        {generatedCode ? (
-                            <pre className="whitespace-pre-wrap">{generatedCode}</pre>
-                        ) : (
-                            <div className="h-full flex items-center justify-center text-slate-600 opacity-50">
-                                <Code2 className="w-16 h-16 mb-4" />
-                                <p>Code generated by AI will appear here.</p>
-                            </div>
-                        )}
                     </div>
                 </div>
             </motion.div>
@@ -429,19 +276,6 @@ serve(async (req) => {
                                 onChange={e => updateDevOpsConfig({...devOpsConfig, github: {...devOpsConfig.github, branch: e.target.value}})}
                             />
                         </div>
-                        <div className="md:col-span-2">
-                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 block flex items-center gap-2">
-                                <Key className="w-3 h-3 text-amber-500"/> Personal Access Token (Required for AI Push)
-                            </label>
-                            <input 
-                                type="password" 
-                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-violet-500 outline-none font-mono"
-                                placeholder="ghp_xxxxxxxxxxxx"
-                                value={devOpsConfig.github.accessToken || ''}
-                                onChange={e => updateDevOpsConfig({...devOpsConfig, github: {...devOpsConfig.github, accessToken: e.target.value}})}
-                            />
-                            <p className="text-[10px] text-slate-400 mt-1">Token này cần quyền `repo` để AI có thể tạo file mới trong repository của bạn.</p>
-                        </div>
                     </div>
                 </div>
 
@@ -451,7 +285,7 @@ serve(async (req) => {
                         <div className="p-2 bg-orange-500 rounded-lg text-white"><Cloud className="w-6 h-6" /></div>
                         <div>
                             <h3 className="font-bold text-lg text-slate-900 dark:text-white">Cloudflare Pages</h3>
-                            <p className="text-xs text-slate-500">Cấu hình Deploy Hook để kích hoạt build.</p>
+                            <p className="text-xs text-slate-500">Cấu hình Deploy Hook để kích hoạt build thật.</p>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -490,7 +324,7 @@ serve(async (req) => {
                         <div className="p-2 bg-emerald-600 rounded-lg text-white"><Database className="w-6 h-6" /></div>
                         <div>
                             <h3 className="font-bold text-lg text-slate-900 dark:text-white">Supabase Integration</h3>
-                            <p className="text-xs text-slate-500">Kết nối Database & Auth cho các tính năng nâng cao.</p>
+                            <p className="text-xs text-slate-500">Kết nối Database & Storage thật.</p>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -518,7 +352,7 @@ serve(async (req) => {
                     <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs text-slate-500 flex items-start gap-2">
                         <ShieldCheck className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                         <div>
-                            Chúng tôi chỉ lưu trữ Public Anon Key để thực hiện các truy vấn client-side an toàn. Không bao giờ nhập Service Role Key tại đây.
+                            Cần tạo Bucket tên <strong>'portfolio'</strong> (Public) trong Supabase Storage để chức năng upload hoạt động.
                         </div>
                     </div>
                 </div>

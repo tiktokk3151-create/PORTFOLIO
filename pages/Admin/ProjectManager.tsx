@@ -5,7 +5,7 @@ import { Project } from '../../types';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon, Save, Upload, Link as LinkIcon, Loader2, Star, Video, Heart } from 'lucide-react';
 
 const ProjectManager: React.FC = () => {
-  const { projects, addProject, updateProject, deleteProject, categories } = useData();
+  const { projects, addProject, updateProject, deleteProject, categories, uploadFile } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Partial<Project>>({});
   const [isUploading, setIsUploading] = useState(false);
@@ -27,7 +27,7 @@ const ProjectManager: React.FC = () => {
     setEditingProject({
       id: Date.now(),
       title: '',
-      category: categories.length > 0 ? categories[0].name : 'Web', // Default to first available or 'Web'
+      category: categories.length > 0 ? categories[0].name : 'Web',
       image: '', 
       description: '',
       technologies: [],
@@ -82,9 +82,8 @@ const ProjectManager: React.FC = () => {
         setIsModalOpen(false);
     } catch (error: any) {
         console.error("Save error:", error);
-        // Check for LocalStorage Quota Exceeded error
         if (error.name === 'QuotaExceededError' || error.code === 22 || error.message?.toLowerCase().includes('quota')) {
-            alert("⚠️ LỖI: BỘ NHỚ TRÌNH DUYỆT ĐÃ ĐẦY (QUOTA EXCEEDED)!\n\nNguyên nhân: Bạn đang cố lưu video hoặc quá nhiều ảnh trực tiếp vào bộ nhớ LocalStorage (Giới hạn ~5MB).\n\nGIẢI PHÁP BẮT BUỘC:\n1. Xóa video bạn vừa tải lên trong form này.\n2. Thay vào đó, hãy upload video lên YouTube/Vimeo/Drive rồi dán Link vào ô nhập liệu.\n3. Hoặc xóa bớt các dự án/ảnh cũ không cần thiết.");
+            alert("⚠️ LỖI: BỘ NHỚ TRÌNH DUYỆT ĐÃ ĐẦY!\n\nLý do: Ảnh đang được lưu trực tiếp vào trình duyệt.\n\nGiải pháp: Vào Admin > DevOps > Cấu hình Supabase và tạo bucket 'portfolio' để upload ảnh lên mây.");
         } else {
             alert("Có lỗi xảy ra khi lưu dự án: " + error.message);
         }
@@ -97,27 +96,18 @@ const ProjectManager: React.FC = () => {
 
   // --- IMAGE HANDLING LOGIC ---
 
-  const convertFileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = error => reject(error);
-    });
-  };
-
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      if (file.size > 2 * 1024 * 1024) { // Warning if > 2MB
-          alert("Cảnh báo: Ảnh lớn hơn 2MB. Việc này có thể làm đầy bộ nhớ trình duyệt nhanh chóng.");
+      if (file.size > 2 * 1024 * 1024) { 
+          alert("Ảnh lớn hơn 2MB có thể gây chậm. Vui lòng chờ xử lý...");
       }
 
       setIsUploading(true);
       try {
-          const base64 = await convertFileToBase64(file);
-          setEditingProject(prev => ({ ...prev, image: base64 }));
+          const imageUrl = await uploadFile(file);
+          setEditingProject(prev => ({ ...prev, image: imageUrl }));
       } catch (err) {
           console.error("Error uploading image", err);
           alert("Lỗi khi tải ảnh.");
@@ -135,10 +125,10 @@ const ProjectManager: React.FC = () => {
           const newImages: string[] = [];
           for (let i = 0; i < files.length; i++) {
               if (files[i].size > 2 * 1024 * 1024) {
-                 alert(`Ảnh ${files[i].name} quá lớn (>2MB). Khuyên dùng ảnh nhỏ hơn.`);
+                 // warning logic handled in uploadFile or ignored
               }
-              const base64 = await convertFileToBase64(files[i]);
-              newImages.push(base64);
+              const imageUrl = await uploadFile(files[i]);
+              newImages.push(imageUrl);
           }
           setEditingProject(prev => ({
               ...prev,
@@ -155,26 +145,15 @@ const ProjectManager: React.FC = () => {
       const file = e.target.files?.[0];
       if (!file) return;
 
-      // Limit video size expanded to 10MB to let user try their luck
-      if (file.size > 10 * 1024 * 1024) {
-          alert("CHẶN: Video này > 10MB. Chắc chắn sẽ làm sập trình duyệt. Vui lòng dùng Link YouTube/Vimeo.");
+      if (file.size > 15 * 1024 * 1024) {
+          alert("Video quá lớn (>15MB). Vui lòng dùng Link YouTube/Vimeo.");
           return;
-      }
-
-      // Soft warning for > 3MB
-      if (file.size > 3 * 1024 * 1024) {
-          const confirm = window.confirm(`CẢNH BÁO: Video này nặng ${(file.size / 1024 / 1024).toFixed(1)}MB.\n\nViệc lưu trực tiếp có thể gây lỗi "Đầy bộ nhớ" (Quota Exceeded) khi bạn nhấn Lưu.\n\nBạn có muốn HỦY tải file để dùng Link URL (YouTube) an toàn hơn không?`);
-          if (confirm) {
-              // User clicked OK to Cancel upload (logic inverted for better UX flow)
-              return; 
-          }
-          // User clicked Cancel to Proceed with upload
       }
 
       setIsUploading(true);
       try {
-          const base64 = await convertFileToBase64(file);
-          setEditingProject(prev => ({ ...prev, video: base64 }));
+          const videoUrl = await uploadFile(file);
+          setEditingProject(prev => ({ ...prev, video: videoUrl }));
       } catch (err) {
           console.error("Error uploading video", err);
           alert("Lỗi khi tải video.");
@@ -299,7 +278,7 @@ const ProjectManager: React.FC = () => {
                             <h2 className="text-2xl font-black text-slate-900 dark:text-white">
                                 {projects.some(p => p.id === editingProject.id) ? 'Chỉnh sửa Dự án' : 'Thêm Dự án Mới'}
                             </h2>
-                            {isUploading && <span className="text-sm text-violet-500 flex items-center gap-1 mt-1"><Loader2 className="w-3 h-3 animate-spin"/> Đang xử lý...</span>}
+                            {isUploading && <span className="text-sm text-violet-500 flex items-center gap-1 mt-1"><Loader2 className="w-3 h-3 animate-spin"/> Đang xử lý (Upload lên Supabase)...</span>}
                         </div>
                         <button type="button" onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                             <X className="w-6 h-6 text-slate-500" />
@@ -355,7 +334,7 @@ const ProjectManager: React.FC = () => {
                         <div className="space-y-3">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex justify-between">
                                 <span>Ảnh đại diện (Thumbnail)</span>
-                                <span className="text-xs font-normal text-slate-400">Khuyên dùng: Tỉ lệ 4:3, Max 500KB</span>
+                                <span className="text-xs font-normal text-slate-400">Khuyên dùng: Tỉ lệ 4:3, Max 2MB</span>
                             </label>
                             
                             <div className="flex gap-6 items-start">
@@ -401,7 +380,7 @@ const ProjectManager: React.FC = () => {
                                             <Upload className="w-4 h-4" /> Tải lên
                                         </button>
                                     </div>
-                                    <p className="text-xs text-slate-500">Hỗ trợ JPG, PNG, WebP. Tự động chuyển đổi sang Base64 để lưu trữ.</p>
+                                    <p className="text-xs text-slate-500">Hỗ trợ JPG, PNG, WebP. Tự động lưu vào Supabase nếu đã cấu hình.</p>
                                 </div>
                             </div>
                         </div>
@@ -410,7 +389,7 @@ const ProjectManager: React.FC = () => {
                         <div className="space-y-3 pt-6 border-t border-slate-100 dark:border-slate-800">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 flex justify-between">
                                 <span>Video giới thiệu (Tùy chọn)</span>
-                                <span className="text-xs font-normal text-slate-400">Khuyên dùng: Link URL hoặc file &lt; 5MB</span>
+                                <span className="text-xs font-normal text-slate-400">Khuyên dùng: Link URL hoặc file &lt; 15MB</span>
                             </label>
                             
                             <div className="flex gap-6 items-start">
@@ -457,7 +436,7 @@ const ProjectManager: React.FC = () => {
                                         </button>
                                     </div>
                                     <p className="text-xs text-slate-500">
-                                        <span className="text-amber-500 font-bold">Lời khuyên:</span> Sử dụng Link YouTube/Vimeo giúp web tải nhanh hơn. Nếu tải file trực tiếp, hãy giữ dung lượng dưới 10MB.
+                                        <span className="text-amber-500 font-bold">Lời khuyên:</span> Sử dụng Link YouTube/Vimeo giúp web tải nhanh hơn.
                                     </p>
                                 </div>
                             </div>
@@ -649,7 +628,7 @@ const ProjectManager: React.FC = () => {
                             className={`px-6 py-3 rounded-xl font-bold bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-600/20 transition-all flex items-center gap-2 cursor-pointer ${isUploading ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                             {isUploading ? <Loader2 className="w-5 h-5 animate-spin"/> : <Save className="w-5 h-5" />} 
-                            {isUploading ? 'Đang xử lý...' : 'Lưu Dự Án'}
+                            {isUploading ? 'Đang tải lên...' : 'Lưu Dự Án'}
                         </button>
                     </div>
                 </div>
