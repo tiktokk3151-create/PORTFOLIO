@@ -6,7 +6,7 @@ import {
     GitBranch, Cloud, Database, Rocket, Terminal, 
     CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw, 
     Link as LinkIcon, Lock, Activity, Server, Clock, Play, Key,
-    Bot, Code2, Cpu, FileCode
+    Bot, Code2, Cpu, FileCode, Eye, EyeOff
 } from 'lucide-react';
 
 const DevOpsCenter: React.FC = () => {
@@ -23,6 +23,10 @@ const DevOpsCenter: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedCode, setGeneratedCode] = useState('');
   const [generationStep, setGenerationStep] = useState<'idle' | 'thinking' | 'coding' | 'done'>('idle');
+
+  // Visibility Toggles
+  const [showDeployHook, setShowDeployHook] = useState(false);
+  const [showAnonKey, setShowAnonKey] = useState(false);
 
   useEffect(() => {
     terminalEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -291,17 +295,21 @@ const DevOpsCenter: React.FC = () => {
                     <div className="space-y-4">
                         <div>
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 block">Deploy Hook URL</label>
-                            <div className="flex gap-2">
+                            <div className="relative">
                                 <input 
-                                    type="password" 
-                                    className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-violet-500 outline-none"
+                                    type={showDeployHook ? "text" : "password"}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 pr-10 text-sm focus:ring-2 focus:ring-violet-500 outline-none"
                                     placeholder="https://api.cloudflare.com/client/v4/pages/webhooks/..."
                                     value={devOpsConfig.cloudflare.deployHookUrl}
                                     onChange={e => updateDevOpsConfig({...devOpsConfig, cloudflare: {...devOpsConfig.cloudflare, deployHookUrl: e.target.value}})}
                                 />
-                                <div className="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                                    <LinkIcon className="w-5 h-5 text-slate-400" />
-                                </div>
+                                <button
+                                    onClick={() => setShowDeployHook(!showDeployHook)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                    title={showDeployHook ? "Hide URL" : "Show URL"}
+                                >
+                                    {showDeployHook ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
                             </div>
                             <p className="text-xs text-slate-400 mt-1">Lấy URL này trong Cloudflare Dashboard &gt; Pages &gt; Settings &gt; Builds & deployments &gt; Deploy hooks</p>
                         </div>
@@ -340,13 +348,22 @@ const DevOpsCenter: React.FC = () => {
                         </div>
                         <div>
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-1 block flex items-center gap-2"><Key className="w-3 h-3"/> Anon / Public Key</label>
-                            <input 
-                                type="password" 
-                                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                                value={devOpsConfig.supabase.anonKey}
-                                onChange={e => updateDevOpsConfig({...devOpsConfig, supabase: {...devOpsConfig.supabase, anonKey: e.target.value}})}
-                            />
+                            <div className="relative">
+                                <input 
+                                    type={showAnonKey ? "text" : "password"}
+                                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 pr-10 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                    value={devOpsConfig.supabase.anonKey}
+                                    onChange={e => updateDevOpsConfig({...devOpsConfig, supabase: {...devOpsConfig.supabase, anonKey: e.target.value}})}
+                                />
+                                <button
+                                    onClick={() => setShowAnonKey(!showAnonKey)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                                    title={showAnonKey ? "Hide Key" : "Show Key"}
+                                >
+                                    {showAnonKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-xs text-slate-500 flex items-start gap-2">
