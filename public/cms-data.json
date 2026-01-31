@@ -1,0 +1,369 @@
+{
+  "timestamp": "2026-01-31T01:57:51.314Z",
+  "projects": [
+    {
+      "id": 1,
+      "title": "Neon NFT Marketplace",
+      "category": "Blockchain",
+      "image": "https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1200&auto=format&fit=crop",
+      "description": "A high-performance NFT marketplace featuring a dark mode UI, 3D interactive elements, and seamless wallet integration.",
+      "technologies": [
+        "React",
+        "Tailwind",
+        "Web3.js",
+        "Three.js"
+      ],
+      "link": "#",
+      "client": "Nebula Art Corp",
+      "year": "2023",
+      "role": "Lead Frontend Engineer",
+      "challenge": "The client needed a marketplace capable of handling high transaction volumes while maintaining an immersive 'Cyberpunk' aesthetic. Performance was key as 3D NFT previews were causing lag on mobile.",
+      "solution": "We implemented a custom WebGL renderer optimized for mobile, reducing download times by 40%. The UI uses glassmorphism and neon gradients to align with the brand identity.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1642104704074-907c0698b98d?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1642543492481-44e81e3914a7?q=80&w=800&auto=format&fit=crop"
+      ],
+      "video": "https://videos.pexels.com/video-files/3129671/3129671-hd_1920_1080_30fps.mp4",
+      "isFeatured": true,
+      "thanksTitle": "Thanks for Visiting",
+      "thanksMessage": "Your Likes and Feedback are well appreciated.",
+      "thanksDescription": "I’m Gin — a digital partner focused on ongoing improvements, helping products evolve through better digital experiences rather than one-time redesigns.",
+      "thanksLinkText": "Let's talk with me",
+      "thanksLinkUrl": "/#/contact"
+    },
+    {
+      "id": 2,
+      "title": "EcoDash Analytics",
+      "category": "Web",
+      "image": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&auto=format&fit=crop",
+      "description": "A sustainable business dashboard for tracking carbon footprints with real-time data visualization.",
+      "technologies": [
+        "Next.js",
+        "D3.js",
+        "TypeScript",
+        "Supabase"
+      ],
+      "link": "#",
+      "client": "GreenEarth Global",
+      "year": "2024",
+      "role": "Full Stack Developer",
+      "challenge": "Converting complex environmental data into actionable insights for non-technical stakeholders. The dashboard needed to handle millions of data points in real-time.",
+      "solution": "Used D3.js for custom interactive charts. Backend built on Supabase for real-time subscription capabilities. Clean UI using 'calm' color palette to evoke nature.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=800&auto=format&fit=crop"
+      ],
+      "isFeatured": true,
+      "thanksTitle": "Thanks for Visiting",
+      "thanksMessage": "Your Likes and Feedback are well appreciated.",
+      "thanksDescription": "Creating sustainable digital solutions requires continuous effort and feedback. We value your input in making the world greener.",
+      "thanksLinkText": "Let's talk with me",
+      "thanksLinkUrl": "/#/contact"
+    },
+    {
+      "id": 3,
+      "title": "Gin Portfolio App",
+      "category": "Mobile",
+      "image": "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=1200&auto=format&fit=crop",
+      "description": "A productivity app focused on flow state, with ambient sounds and a pomodoro timer.",
+      "technologies": [
+        "React Native",
+        "Expo",
+        "Firebase",
+        "Reanimated"
+      ],
+      "link": "#",
+      "client": "Personal Project",
+      "year": "2023",
+      "role": "Design & Development",
+      "challenge": "Most productivity apps are too cluttered. I wanted to create an app that helps users focus through minimalism and audio cues, rather than just lists.",
+      "solution": "Designed a gesture-based UI with no on-screen buttons on the main view. Smooth 60fps animations using Reanimated 2. Dark mode optimized for OLED screens to save battery.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1526498460520-4c246339dccb?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1555774698-0b77e0d5fac6?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1551650975-87deedd944c3?q=80&w=800&auto=format&fit=crop"
+      ],
+      "isFeatured": true
+    },
+    {
+      "id": 4,
+      "title": "Flux Design System",
+      "category": "Design",
+      "image": "https://images.unsplash.com/photo-1561070791-2526d30994b5?q=80&w=1200&auto=format&fit=crop",
+      "description": "Comprehensive Figma design system used by over 500 designers worldwide.",
+      "technologies": [
+        "Figma",
+        "Design Tokens",
+        "Storybook"
+      ],
+      "link": "#",
+      "client": "Open Source",
+      "year": "2022",
+      "role": "Lead Design Systems",
+      "challenge": "Creating a system flexible enough for both B2B enterprise apps and B2C creative websites.",
+      "solution": "Built a token-based architecture allowing for multi-brand theming. Included over 200 components and auto-layout patterns.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1586717791821-3f44a5638d28?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=800&auto=format&fit=crop"
+      ],
+      "isFeatured": false
+    },
+    {
+      "id": 5,
+      "title": "Crypto Wallet Core",
+      "category": "Blockchain",
+      "image": "https://images.unsplash.com/photo-1639322537228-ad7117a76437?q=80&w=1200&auto=format&fit=crop",
+      "description": "Secure, decentralized crypto wallet interface with multi-chain support.",
+      "technologies": [
+        "Vue",
+        "Ethers.js",
+        "Rust",
+        "Wasm"
+      ],
+      "link": "#",
+      "client": "DeFi Safe",
+      "year": "2023",
+      "role": "Frontend Architect",
+      "challenge": "Security vs Usability. Making transaction signing clear and understandable for new users.",
+      "solution": "Implemented human-readable transaction parsing. Interface warns users of potential scams using a risk scoring algorithm.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1621416894569-0f39ed31d247?q=80&w=800&auto=format&fit=crop"
+      ],
+      "isFeatured": false
+    },
+    {
+      "id": 6,
+      "title": "Aero Landing Page",
+      "category": "Web",
+      "image": "https://images.unsplash.com/photo-1457369804613-52c61a468e7d?q=80&w=1200&auto=format&fit=crop",
+      "description": "Award-winning landing page for an aerospace startup featuring immersive scroll animations.",
+      "technologies": [
+        "React",
+        "GSAP",
+        "WebGL",
+        "Three.js"
+      ],
+      "link": "#",
+      "client": "AeroSpace X",
+      "year": "2024",
+      "role": "Creative Developer",
+      "challenge": "Client wanted a 'cinematic' web experience to showcase their new jet engine.",
+      "solution": "Used GSAP ScrollTrigger combined with a 3D model of the engine. As users scroll, the engine deconstructs to show inner workings.",
+      "gallery": [
+        "https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=800&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1541185933-710f50746747?q=80&w=800&auto=format&fit=crop"
+      ],
+      "isFeatured": false
+    }
+  ],
+  "categories": [
+    {
+      "id": "Web",
+      "name": "Web"
+    },
+    {
+      "id": "Mobile",
+      "name": "Mobile"
+    },
+    {
+      "id": "Design",
+      "name": "Design"
+    },
+    {
+      "id": "Blockchain",
+      "name": "Blockchain"
+    }
+  ],
+  "homeContent": {
+    "hero": {
+      "badge": "Available for hire",
+      "title1": "Designing the",
+      "title2": "Future",
+      "title3": "Web",
+      "desc": "I'm Trần Quốc Tuấn. A passionate UI/UX Designer creating user-friendly, aesthetic, and professional digital experiences."
+    },
+    "about": {
+      "badge": "About Me",
+      "title": "Digital Dreams",
+      "desc": "With over 7 years of specialized experience, I combine creative design thinking with technical understanding to build digital products that are not only visually stunning but also optimized for user experience.",
+      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop"
+    },
+    "skills": {
+      "title1": "Software",
+      "title2": "Expertise",
+      "desc": "Tools and skills I utilize to bring creative visions to life."
+    },
+    "featured": {
+      "badge": "Featured Works",
+      "title1": "Featured",
+      "title2": "Works",
+      "desc": "Selected projects that define my style."
+    },
+    "cta": {
+      "status": "Status: Available",
+      "title1": "Have an idea?",
+      "title2": "Let's shape the future.",
+      "desc": "I am currently open for new opportunities. Whether you have a question or just want to say hi!"
+    }
+  },
+  "homeLayout": [
+    {
+      "id": "hero",
+      "label": "Hero / Introduction",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "about",
+      "label": "About Summary",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "skills",
+      "label": "Skills & Tools",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "featured",
+      "label": "Featured Projects",
+      "visible": true,
+      "order": 3
+    },
+    {
+      "id": "cta",
+      "label": "Call To Action",
+      "visible": true,
+      "order": 4
+    }
+  ],
+  "aboutContent": {
+    "intro": {
+      "badge": "About Me",
+      "title1": "Creative",
+      "title2": "Design",
+      "title3": "&",
+      "title4": "Adaptability",
+      "desc1": "With over",
+      "desc2_highlight": "7 years of experience",
+      "desc3": "in UI/UX design, I have developed a strong ability to adapt and learn quickly.",
+      "desc4": "I am always ready to explore new trends, constantly improving my skills with passion and dedication.",
+      "mainImage": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop",
+      "stat_years": "Years Exp",
+      "stat_companies": "Major Companies",
+      "stat_dedication": "Dedication"
+    },
+    "education": {
+      "title": "Education Background",
+      "school": "Nguyen Tat Thanh University",
+      "major": "Major in",
+      "major_val": "Information Technology",
+      "grade": "Grade",
+      "grade_val": "Good"
+    },
+    "experience": {
+      "title": "Work Experience",
+      "desc": "A timeline of my professional career.",
+      "items": [
+        {
+          "id": 1,
+          "year": "2023 - 2025",
+          "role": "UI/UX Designer",
+          "company": "ESUHAI CO., LTD",
+          "colorTheme": "purple",
+          "desc": "• Responsible for designing and editing web interfaces.\n• Researched, updated, and applied current UI/UX design trends for Apps and Websites to products, focusing on creativity and user-friendliness.\n• Based on internal information, proposed product improvement features closely aligned with customer needs.\n• Coordinated effectively with other design members to ensure consistency and accuracy when communicating product images externally.\n• Worked closely with product development engineers to propose feature improvements or optimize processes.\n• Presented design ideas to cross-functional teams with leadership spirit."
+        },
+        {
+          "id": 2,
+          "year": "2020 - 2023",
+          "role": "UI/UX Designer",
+          "company": "GLOBAL CARE INSURTECH",
+          "colorTheme": "blue",
+          "desc": "• Designed websites, mobile apps, web apps, Landing pages, and systems for projects implemented by the company and major partners such as GRAB, Ahamove, TGDD, etc.\n• Proficient in Figma design tools and other design tools like Photoshop, Illustrator, Canva, etc.\n• Worked with PM and BA to plan product implementation, change designs as required, research and analyze user behavior and experience with BA to help users have the best and most optimal experience.\n• Edited and redesigned products/applications of the company and partners.\n• Responsible for designing, building, and completing user interfaces, coordinating with the DEV and PM team to manage projects.\n• Supported Dev in adjusting designs, testing designs, and supporting other departments when requested.\n• Ability to work independently, adapt quickly to new environments and projects, and handle work before deadlines.\n• Always worked hard with team spirit to help and support colleagues with high responsibility."
+        },
+        {
+          "id": 3,
+          "year": "2016 - 2019",
+          "role": "UI/UX Designer",
+          "company": "CHO TOT",
+          "colorTheme": "green",
+          "desc": "• Designed websites and mobile applications for company projects and coordinated with partner companies to launch products combined with their business areas.\n• Coordinated with the DEV and PM team to manage projects. Designed, built, and completed user interfaces, proposed ideas, solved encountering problems.\n• Coordinated with BA, PM, DEV to complete projects on time and before deadlines.\n• Supported Marketing Team in designing media publications.\n• Experienced in designing: Website, Mobile App, Web App, CRM, CMS, Dashboard, Responsive, Design System, Style guide."
+        }
+      ]
+    },
+    "hobbies": {
+      "title": "Hobbies",
+      "items": [
+        {
+          "id": 1,
+          "name": "Movies",
+          "image": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Clapper%20Board.png"
+        },
+        {
+          "id": 2,
+          "name": "Photography",
+          "image": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Camera.png"
+        },
+        {
+          "id": 3,
+          "name": "Design",
+          "image": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Artist%20Palette.png"
+        },
+        {
+          "id": 4,
+          "name": "Singing",
+          "image": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Microphone.png"
+        },
+        {
+          "id": 5,
+          "name": "Soccer",
+          "image": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Soccer%20Ball.png"
+        },
+        {
+          "id": 6,
+          "name": "Gaming",
+          "image": "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Video%20Game.png"
+        }
+      ]
+    }
+  },
+  "aboutLayout": [
+    {
+      "id": "intro",
+      "label": "Introduction & Stats",
+      "visible": true,
+      "order": 0
+    },
+    {
+      "id": "education",
+      "label": "Education Background",
+      "visible": true,
+      "order": 1
+    },
+    {
+      "id": "experience",
+      "label": "Work Experience",
+      "visible": true,
+      "order": 2
+    },
+    {
+      "id": "hobbies",
+      "label": "Hobbies & Interests",
+      "visible": true,
+      "order": 3
+    }
+  ],
+  "contactContent": {
+    "badge": "Get in touch",
+    "title1": "Let's Create",
+    "title2": "Something Epic",
+    "desc": "Have a project in mind? Or maybe you just want to say hi? I'm always open to new ideas and collaborations.",
+    "email": "x6sumo1@gmail.com",
+    "phone": "093.3456.605",
+    "address": "100 Lý Tế Xuyên, Linh Đông, Thu Duc - HCM",
+    "formTitle": "Send me a message"
+  }
+}
